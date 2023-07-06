@@ -1,25 +1,80 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"golang.org/x/net/html"
 )
 
+type Link struct {
+	Href string
+	Text string
+}
+
+var List []Link
+
 func main() {
-	filePath := "./Testcase/ex1.html"
-	file, err := os.Open(filePath)
-	if err != nil {
-		panic(err)
+	testCase := 4
+	for i := 1; i <= testCase; i++ {
+		filePath := fmt.Sprintf("./Testcase/ex%v.html", i)
+		fmt.Println(filePath)
+		file, err := os.Open(filePath)
+		if err != nil {
+			panic(err)
+		}
+
+		defer file.Close()
+
+		r := io.Reader(file)
+
+		// parse the reader
+		doc, _ := html.Parse(r)
+
+		// check for the a tag
+		findLink(doc)
+
+		fmt.Printf("output for test case %v \n", i)
+		fmt.Println(List)
+
+		// clear the list
+		List = []Link{}
+	}
+}
+
+// finds the "a" tag through dfs
+func findLink(node *html.Node) {
+	if node.Data == "a" {
+		href := strings.TrimSpace(node.Attr[0].Val)
+		text := strings.TrimSpace(findText(node))
+		List = append(List, Link{Href: href, Text: text})
+		return
 	}
 
-	defer file.Close()
+	for child := node.FirstChild; child != nil; child = child.NextSibling {
+		findLink(child)
+	}
+}
 
-	r := io.Reader(file)
+// returns the text string in "a"
+func findText(node *html.Node) string {
+	if node == nil {
+		return ""
+	}
 
-	doc, _ := html.Parse(r)
+	if node.FirstChild == nil {
+		if node.Type == html.TextNode {
+			return node.Data
+		}
+		return ""
+	}
 
-	html.Render(os.Stdout, doc)
+	text := ""
+	for child := node.FirstChild; child != nil; child = child.NextSibling {
+		text = text + " " + strings.TrimSpace(findText(child))
+	}
 
+	return text
 }

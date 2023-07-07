@@ -4,17 +4,10 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
 
+	Link "github.com/tusharr-patil/html-link-parser"
 	"golang.org/x/net/html"
 )
-
-type Link struct {
-	Href string
-	Text string
-}
-
-var List []Link
 
 func main() {
 	testCase := 4
@@ -34,47 +27,9 @@ func main() {
 		doc, _ := html.Parse(r)
 
 		// check for the a tag
-		findLink(doc)
+		list := Link.GetLinks(doc)
 
 		fmt.Printf("output for test case %v \n", i)
-		fmt.Println(List)
-
-		// clear the list
-		List = []Link{}
+		fmt.Println(list)
 	}
-}
-
-// finds the "a" tag through dfs
-func findLink(node *html.Node) {
-	if node.Data == "a" {
-		href := strings.TrimSpace(node.Attr[0].Val)
-		text := strings.TrimSpace(findText(node))
-		List = append(List, Link{Href: href, Text: text})
-		return
-	}
-
-	for child := node.FirstChild; child != nil; child = child.NextSibling {
-		findLink(child)
-	}
-}
-
-// returns the text string in "a"
-func findText(node *html.Node) string {
-	if node == nil {
-		return ""
-	}
-
-	if node.FirstChild == nil {
-		if node.Type == html.TextNode {
-			return node.Data
-		}
-		return ""
-	}
-
-	text := ""
-	for child := node.FirstChild; child != nil; child = child.NextSibling {
-		text = text + " " + strings.TrimSpace(findText(child))
-	}
-
-	return text
 }

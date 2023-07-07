@@ -22,7 +22,12 @@ func GetLinks(node *html.Node) []Link {
 // finds the "a" tag through dfs
 func findLink(node *html.Node) {
 	if node.Data == "a" {
-		href := strings.TrimSpace(node.Attr[0].Val)
+		var href string
+		for _, attr := range node.Attr {
+			if attr.Key == "href" {
+				href = attr.Val
+			}
+		}
 		text := strings.TrimSpace(findText(node))
 		list = append(list, Link{Href: href, Text: text})
 		return
